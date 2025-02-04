@@ -1,0 +1,22 @@
+{% extends "network/layout.html" %}
+{% load crispy_forms_tags %}
+
+{% block body %}
+<form method="post">
+    <h5> New Post </h5>
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-primary" name="create_post" > Publish </button>
+
+</form>
+
+
+{% for post in posts%}
+<ul>
+    <li>{{ post.user }}</li>
+    <li>{{ post.title }}</li>
+    <li>{{ post.content }}</li>
+</ul>
+{% endfor %}
+
+{% endblock %}

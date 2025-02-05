@@ -2,21 +2,38 @@
 {% load crispy_forms_tags %}
 
 {% block body %}
-<form method="post">
-    <h5> New Post </h5>
-    {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" class="btn btn-primary" name="create_post" > Publish </button>
 
-</form>
+<h3> All posts </h3>
+<div class="container mt-4">
+    <!-- Section 1: New Post Form (Above) -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">New Post</h5>
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary" name="create_post" > Publish </button>
+            </form>
+        </div>
+    </div>
 
-
-{% for post in posts%}
-<ul>
-    <li>{{ post.user }}</li>
-    <li>{{ post.title }}</li>
-    <li>{{ post.content }}</li>
-</ul>
-{% endfor %}
-
-{% endblock %}
+    <!-- Section 2: Posts Feed (Below) -->
+    <div id="posts-section">
+        {% for post in posts%}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">{{ post.user }}</h5>
+                <a href="#" class="text-primary">Edit</a>
+                <p class="mt-2">{{ post.content }}</p>
+                <small class="text-muted">{{ post.timestamp }}</small>
+                <div class="mt-2">
+                    <span class="text-danger">❤️</span> <span>{{ post.like_count }}</span>
+                    <a href="#" class="text-secondary ms-2">Comment</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+    
+    {% endblock %}

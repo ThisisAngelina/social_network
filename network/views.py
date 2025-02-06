@@ -85,7 +85,7 @@ def home(request):
         page_obj = paginator.get_page(page_number)
         return render(request, 'network/home.html', {'form': form, 'page_obj': page_obj})
 
-
+@login_required
 def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     posts = Post.objects.filter(user=user)
@@ -95,42 +95,55 @@ def profile(request, user_id):
     page_obj = paginator.get_page(page_number)
     return render(request, 'network/profile.html', {'profile_user':user, 'page_obj': page_obj})
 
-
+@login_required
 def follow(request, user_id):
     if request.method == "POST":
-        print('the (un)follow button was pressed')
-        profile_user = get_object_or_404(User, id=user_id)
-        if profile_user is not None:
-            follow_relation, created = Following.objects.get_or_create(follower=request.user, followed=profile_user)
+        if request.user.is_authenticated:
+       
+            profile_user = get_object_or_404(User, id=user_id)
+            if profile_user is not None:
+                follow_relation, created = Following.objects.get_or_create(follower=request.user, followed=profile_user)
 
-            if not created: # the user was already following that profile
-                follow_relation.delete()  # Unfollow if already following
-                print("the following relationship was deleted")
-            
-            print("the following relationship was created")
-
-            unfollow_option = created  # Now that the user follows this profile, give them the option to unfollow it
-
-            # Send back the updated button as an HTMX response
-            button_html = f'''
-                <button class="btn {"btn-danger" if unfollow_option else "btn-primary"}"
-                        hx-post="/follow/{profile_user.id}/"
-                        hx-target="#follow-btn"
-                        hx-swap="outerHTML"
-                        id="follow-btn">
-                    {"Unfollow" if unfollow_option else "Follow"}
-                </button>
-            '''
-            
-            following_result = "followed" if unfollow_option else "unfollowed" # for the message
-            messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
-            return HttpResponse(button_html)
+                if not created: # the user was already following that profile
+                    follow_relation.delete()  # Unfollow if already following
                 
+                
+        
+
+                unfollow_option = created  # Now that the user follows this profile, give them the option to unfollow it
+
+                # Send back the updated button as an HTMX response
+                button_html = f'''
+                    <button class="btn {"btn-danger" if unfollow_option else "btn-primary"}"
+                            hx-post="/follow/{profile_user.id}/"
+                            hx-target="#follow-btn"
+                            hx-swap="outerHTML"
+                            id="follow-btn">
+                        {"Unfollow" if unfollow_option else "Follow"}
+                    </button>
+                '''
+                
+                following_result = "followed" if unfollow_option else "unfollowed" # for the message
+                messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
+                return HttpResponse(button_html)
+            else: # user was not logged in
+                messages.error(request, "Oops! Please log in to publish a post!")
+                return redirect('login')
+
         else: # the profile user was not found
             messages.error(request, "Oops! Something went wrong! Please try again.")
             return redirect('profile', user_id=profile_id)
         
     else:
         print("the button sent a GET request")
-        
-#TODO add links to profile pages in posts 
+
+
+@login_required
+def followed_posts(request):
+    followed_users = Following.objects.filter(follower=request.user).values_list('followed', flat=True)
+    followed_posts = Post.objects.filter(user__in=followed_users).order_by('-timestamp')
+
+    paginator = Paginator(followed_posts, 10)  # display 10 posts at a time
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'network/followed_posts.html', {'page_obj': page_obj})

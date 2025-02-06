@@ -1,0 +1,32 @@
+
+<div id="posts-section">
+    {% for post in page_obj %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title"><a href="{% url 'profile' user_id=post.user.id %}">{{ post.user }}</a></h5>
+            <a href="#" class="text-primary">Edit</a>
+            <p class="mt-2">{{ post.content }}</p>
+            <small class="text-muted">{{ post.timestamp }}</small>
+            <div class="mt-2">
+                <span class="text-danger">❤️</span> <span>{{ post.like_count }}</span>
+                <a href="#" class="text-secondary ms-2">Comment</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+<!-- Navigation buttons -->
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}">next</a>
+        {% endif %}
+    </div>
+</div>
+</div>

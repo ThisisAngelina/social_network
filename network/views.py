@@ -1,3 +1,4 @@
+from webbrowser import get
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
 from django.db import IntegrityError
@@ -7,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Post
+from .models import User, Post, Following
 from .forms import PostCreateForm
 
 def login_view(request):
@@ -95,5 +96,41 @@ def profile(request, user_id):
     return render(request, 'network/profile.html', {'profile_user':user, 'page_obj': page_obj})
 
 
-def follow(request):
-    pass
+def follow(request, user_id):
+    if request.method == "POST":
+        print('the (un)follow button was pressed')
+        profile_user = get_object_or_404(User, id=user_id)
+        if profile_user is not None:
+            follow_relation, created = Following.objects.get_or_create(follower=request.user, followed=profile_user)
+
+            if not created: # the user was already following that profile
+                follow_relation.delete()  # Unfollow if already following
+                print("the following relationship was deleted")
+            
+            print("the following relationship was created")
+
+            unfollow_option = created  # Now that the user follows this profile, give them the option to unfollow it
+
+            # Send back the updated button as an HTMX response
+            button_html = f'''
+                <button class="btn {"btn-danger" if unfollow_option else "btn-primary"}"
+                        hx-post="/follow/{profile_user.id}/"
+                        hx-target="#follow-btn"
+                        hx-swap="outerHTML"
+                        id="follow-btn">
+                    {"Unfollow" if unfollow_option else "Follow"}
+                </button>
+            '''
+            
+            following_result = "followed" if unfollow_option else "unfollowed" # for the message
+            messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
+            return HttpResponse(button_html)
+                
+        else: # the profile user was not found
+            messages.error(request, "Oops! Something went wrong! Please try again.")
+            return redirect('profile', user_id=profile_id)
+        
+    else:
+        print("the button sent a GET request")
+        
+#TODO add links to profile pages in posts 

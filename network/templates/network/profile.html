@@ -1,6 +1,6 @@
 {% extends "network/layout.html" %}
 {% block body %}
-
+<script src="https://unpkg.com/htmx.org@1.9.4"></script>
     <div class="container mt-4">
         <!-- Profile Header -->
         <div class="card mb-3">
@@ -11,10 +11,18 @@
 
                 <!-- Follow/Unfollow Button (only if signed in and not viewing own profile) -->
                 {% if user.is_authenticated and user != profile_user %}
-                    <button >
-                        {% if is_following %} Unfollow {% else %} Follow {% endif %}
-                    </button>
-                {% endif %}
+                    <form id="follow-form">
+                        {% csrf_token %}
+                        <button class="btn {% if unfollow_option %}btn-danger{% else %}btn-primary{% endif %}"
+                                type="button"
+                                hx-post="{% url 'follow' profile_user.id %}"
+                                hx-target="#follow-btn"
+                                hx-swap="outerHTML"
+                                id="follow-btn">
+                            {% if unfollow_option %} Unfollow {% else %} Follow {% endif %}
+                        </button>
+                    </form>
+        {% endif %}
             </div>
         </div>
 

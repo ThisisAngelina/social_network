@@ -1,0 +1,49 @@
+{% extends "network/layout.html" %}
+{% block body %}
+
+    <div class="container mt-4">
+        <!-- Profile Header -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2>{{ profile_user.username }}</h2>
+                <p><strong>Followers:</strong> {{ profile_user.followers.count }}</p>
+                <p><strong>Following:</strong> {{ profile_user.followed_accounts.count }}</p>
+
+                <!-- Follow/Unfollow Button (only if signed in and not viewing own profile) -->
+                {% if user.is_authenticated and user != profile_user %}
+                    <button >
+                        {% if is_following %} Unfollow {% else %} Follow {% endif %}
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- User's Posts -->
+        <h3>{{ profile_user.username }}'s posts</h3>
+
+        {% for post in page_obj %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <p>{{ post.content }}</p>
+                    <small class="text-muted">{{ post.timestamp }}</small>
+                </div>
+            </div>
+        {% empty %}
+            <p>No posts yet.</p>
+        {% endfor %}
+
+        <!-- Navigation buttons -->
+        <div class="container mt-4">
+            <div class="d-flex justify-content-between">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

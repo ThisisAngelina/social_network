@@ -1,5 +1,5 @@
 {% load static %}
-
+<script src="https://unpkg.com/htmx.org@1.9.4"></script>
 <div id="post-{{ post.id }}" class="card mb-3 shadow-sm rounded">
     <div class="card-body">
 
@@ -25,7 +25,7 @@
             <span class="text-danger me-2">❤️</span> <span class="me-3">{{ post.like_count }}</span>
 
             {% if user == post.user %}
-            <form>
+        
                 <button class="btn btn-primary" 
                         hx-get="{% url 'edit_post' post_id=post.id %}"
                         hx-target="#post-{{ post.id }}"
@@ -33,7 +33,7 @@
                         id="edit-btn">
                     <i class="bi bi-pencil-square"></i> Edit
                 </button>
-            </form>
+          
 
             {% else %}
                 <!-- Like & Comment Buttons -->
@@ -46,6 +46,6 @@
             {% endif %}
         </div>
 
-    </div>
+        </div>
 </div>
-</div>
+

@@ -8,6 +8,8 @@ urlpatterns = [
     path('profile/<int:user_id>/', views.profile, name='profile'),
     path('follow/<int:user_id>/', views.follow, name='follow'),
     path('followed_posts', views.followed_posts, name='followed_posts'),
+    path('edit_post/<int:post_id>/', views.edit_post, name='edit_post'),
+    path('save_post/<int:post_id>/', views.save_post, name='save_post'),
 
     # autentication
     path("login", views.login_view, name="login"),

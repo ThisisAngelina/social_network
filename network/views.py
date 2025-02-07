@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from .models import User, Post, Following
-from .forms import PostCreateForm
+from .forms import PostForm
 
 def login_view(request):
     if request.method == "POST":
@@ -68,7 +68,7 @@ def home(request):
     ''' Allow an authenticated user to publish a post and all users to view posts'''
     if request.method == 'POST':
         user = request.user
-        form = PostCreateForm(request.POST)
+        form = PostForm(request.POST)
 
         if form.is_valid():
             new_post = form.save(commit=False)
@@ -78,7 +78,7 @@ def home(request):
             return redirect('home')
         messages.error(request, "Oops! Something went wrong! Please try again.") # form was not valid
     else:
-        form = PostCreateForm()
+        form = PostForm()
         posts = Post.objects.all()
         paginator = Paginator(posts, 10)  # display 10 posts at a time
         page_number = request.GET.get('page')
@@ -147,3 +147,47 @@ def followed_posts(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(request, 'network/followed_posts.html', {'page_obj': page_obj})
+
+@login_required
+def edit_post(request, post_id):
+    ''' alow the user to request to edit a particular post '''
+
+    post = get_object_or_404(Post, id=post_id)
+    
+    if post.user != request.user:  # Ensure only the owner can edit
+        messages.error(request, "Oops, you cannot edit this post!")
+        return HttpResponse("Unauthorized", status=403)
+
+    form = PostForm(instance=post) # prefill the edit form with the existing data saved in the model instance
+
+    return render(request, "network/partials/edit_post.html", {"form": form, "post": post})
+
+
+@login_required
+def save_post(request, post_id):
+    ''' alow the user to save the edited post '''
+
+    print('the save button was pressed')
+    post = get_object_or_404(Post, id=post_id)
+
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)  # save the model instance with the data passed through the form
+
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your post was successfully edited")
+
+            # Return the updated post HTML
+            return render(request, "network/partials/post.html", {"post": post})
+
+    messages.error(request, "Error updating post")
+    return HttpResponse("Invalid Request", status=400)
+
+
+@login_required
+def like(request, post_id):
+    pass
+
+@login_required
+def comment(request, post_id):
+    pass

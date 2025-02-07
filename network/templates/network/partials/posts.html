@@ -1,16 +1,54 @@
 
+{% load static %}
+<script src="https://unpkg.com/htmx.org@1.9.4"></script>
 <div id="posts-section">
     {% for post in page_obj %}
-    <div class="card mb-3">
+    <div id="post-{{ post.id }}" class="card mb-3 shadow-sm rounded">
         <div class="card-body">
-            <h5 class="card-title"><a href="{% url 'profile' user_id=post.user.id %}">{{ post.user }}</a></h5>
-            <a href="#" class="text-primary">Edit</a>
-            <p class="mt-2">{{ post.content }}</p>
-            <small class="text-muted">{{ post.timestamp }}</small>
-            <div class="mt-2">
-                <span class="text-danger">❤️</span> <span>{{ post.like_count }}</span>
-                <a href="#" class="text-secondary ms-2">Comment</a>
+
+            <!-- User Info Row -->
+            <div class="d-flex align-items-center">
+                <!-- Placeholder Avatar -->
+                <img src="{% static 'network/network_profile_user.jpg' %}" alt="Profile" class="rounded-circle me-2" width="40" height="40">
+                <h5 class="card-title mb-0">
+                    <a href="{% url 'profile' user_id=post.user.id %}" class="text-dark text-decoration-none">
+                        {{ post.user }}
+                    </a>
+                </h5>
             </div>
+
+            <!-- Post Content -->
+            <p class="mt-2">{{ post.content }}</p>
+
+            <!-- Timestamp -->
+            <small class="text-muted">{{ post.timestamp }}</small>
+
+            <!-- Interaction Buttons -->
+            <div class="d-flex align-items-center mt-3">
+                <span class="text-danger me-2">❤️</span> <span class="me-3">{{ post.like_count }}</span>
+
+                {% if user == post.user %}
+                <form>
+                    <button class="btn btn-primary" 
+                            hx-get="{% url 'edit_post' post_id=post.id %}"
+                            hx-target="#post-{{ post.id }}"
+                            hx-swap="outerHTML"
+                            id="edit-btn">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </button>
+                </form>
+
+                {% else %}
+                    <!-- Like & Comment Buttons -->
+                    <a href="#" class="text-secondary me-3">
+                        <i class="bi bi-hand-thumbs-up"></i> Like
+                    </a>
+                    <a href="#" class="text-secondary">
+                        <i class="bi bi-chat-dots"></i> Comment
+                    </a>
+                {% endif %}
+            </div>
+
         </div>
     </div>
     {% endfor %}
@@ -30,3 +68,7 @@
     </div>
 </div>
 </div>
+
+
+<!-- Bootstrap Icons (Needed for Like, Comment, Edit icons) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">

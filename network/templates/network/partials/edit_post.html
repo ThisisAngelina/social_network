@@ -1,0 +1,18 @@
+{% load crispy_forms_tags %}
+{% comment %} <script src="https://unpkg.com/htmx.org@1.9.4"></script> {% endcomment %} 
+
+<div id="post-{{ post.id }}" class="card mb-3 shadow-sm rounded">
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+
+    <button class="btn btn-success mb-3"
+            hx-post="{% url 'save_post' post_id=post.id %}"
+            hx-target="#post-{{ post.id }}"
+            hx-swap="outerHTML"
+            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+            id="save-btn">
+        <i class="bi bi-check-circle"></i> Save
+    </button>
+</form>
+</div>

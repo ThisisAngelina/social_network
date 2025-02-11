@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from .models import User, Post, Following, Like
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 
 def login_view(request):
     if request.method == "POST":
@@ -106,10 +106,26 @@ def profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     posts = Post.objects.filter(user=user)
 
+
+     # Establishing the Follow relationship
+    following = Following.objects.filter(follower=request.user, followed=user).exists()
+
+    # Django pagination
     paginator = Paginator(posts, 10)  # display 10 posts at a time
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'network/profile.html', {'profile_user':user, 'page_obj': page_obj})
+
+    # Establishing the Like relationships
+    post_data = []
+
+    for post in page_obj:
+        unlike_option = Like.objects.filter(post=post, user=request.user).exists() # the user had already liked hte post and can now unlike it   
+        post_data.append({
+            'post': post,
+            'unlike_option': unlike_option
+        })
+
+    return render(request, 'network/profile.html', {'profile_user':user, 'unfollow_option': following, 'page_obj': page_obj, 'posts': post_data})
 
 @login_required
 def follow(request, user_id):
@@ -133,8 +149,6 @@ def follow(request, user_id):
             </button>
         '''
         
-        following_result = "followed" if unfollow_option else "unfollowed" # for the message
-        messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
         return HttpResponse(button_html)
 
     else: # the profile user was not found
@@ -150,7 +164,17 @@ def followed_posts(request):
     paginator = Paginator(followed_posts, 10)  # display 10 posts at a time
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, 'network/followed_posts.html', {'page_obj': page_obj})
+
+    # Establishing the Like relationships
+    post_data = []
+
+    for post in page_obj:
+        unlike_option = Like.objects.filter(post=post, user=request.user).exists() # the user had already liked hte post and can now unlike it   
+        post_data.append({
+            'post': post,
+            'unlike_option': unlike_option
+        })
+    return render(request, 'network/followed_posts.html', {'page_obj': page_obj, 'posts': post_data})
 
 @login_required
 def edit_post(request, post_id):
@@ -228,13 +252,8 @@ def like(request, post_id):
 
     
 
-
-
-# aslo need to implement UNLIKE
-# add htmx to the like button
-# when a person has liked a post, send back html of an unlike button 
-#  
-
 @login_required
 def comment(request, post_id):
+    ''' allow the user to commnent on a post '''
+
     pass

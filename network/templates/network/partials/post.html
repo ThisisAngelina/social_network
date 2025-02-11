@@ -1,6 +1,6 @@
 {% load static %}
 <script src="https://unpkg.com/htmx.org@1.9.4"></script>
-<div id="post-{{ post.id }}" class="card mb-3 shadow-sm rounded">
+<div id="post-{{ post_dict.post.id }}" class="card mb-3 shadow-sm rounded">
     <div class="card-body">
 
         <!-- User Info Row -->
@@ -8,27 +8,29 @@
             <!-- Placeholder Avatar -->
             <img src="{% static 'network/network_profile_user.jpg' %}" alt="Profile" class="rounded-circle me-2" width="40" height="40">
             <h5 class="card-title mb-0">
-                <a href="{% url 'profile' user_id=post.user.id %}" class="text-dark text-decoration-none">
-                    {{ post.user }}
+                {% with post_dict.post.user.id as user_id %}
+                <a href="{% url 'profile' user_id=user_id %}" class="text-dark text-decoration-none">
+                    {% endwith %}
+                    {{ post_dict.post.user.username }} 
                 </a>
             </h5>
         </div>
 
         <!-- Post Content -->
-        <p class="mt-2">{{ post.content }}</p>
+        <p class="mt-2">{{ post_dict.post.content }}</p>
 
         <!-- Timestamp -->
-        <small class="text-muted">{{ post.timestamp }}</small>
+        <small class="text-muted">{{ post_dict.post.timestamp }}</small>
 
-        <!-- Interaction Buttons -->
+        <!-- Icons and Buttons -->
         <div class="d-flex align-items-center mt-3">
-            <span class="text-danger me-2">❤️</span> <span class="me-3">{{ post.like_count }}</span>
+            <span  class="text-danger me-2">❤️</span> <span id="like-count-{{post_dict.post.id}}" class="me-3">{{ post_dict.post.like_count }}</span>
 
-            {% if user == post.user %}
+            {% if user == post_dict.post.user %}
         
-                <button class="btn btn-primary" 
-                        hx-get="{% url 'edit_post' post_id=post.id %}"
-                        hx-target="#post-{{ post.id }}"
+                <button class="btn btn-primary mx-2" 
+                        hx-get="{% url 'edit_post' post_id=post_dict.post.id %}"
+                        hx-target="#post-{{ post_dict.post.id }}"
                         hx-swap="outerHTML"
                         id="edit-btn">
                     <i class="bi bi-pencil-square"></i> Edit
@@ -37,12 +39,32 @@
 
             {% else %}
                 <!-- Like & Comment Buttons -->
-                <a href="#" class="text-secondary me-3">
-                    <i class="bi bi-hand-thumbs-up"></i> Like
-                </a>
+
+                <!-- Like Button (only if signed in and the post is not the user's post) -->
+                {% if user.is_authenticated %}
+                    <form id="like-form">
+                        {% csrf_token %}
+                        <button class="btn {% if post_dict.unlike_option %}btn-outline-warning mx-2 {% else %}btn-outline-success mx-2 {% endif %}"
+                                type="button"
+                                
+                                hx-post="{% url 'like' post_dict.post.id %}"
+                                hx-target="#like-btn-{{post_dict.post.id}}"
+                                hx-swap="outerHTML"
+                                id="like-btn-{{post_dict.post.id}}">
+                            {% if post_dict.unlike_option %} 
+                            <i class="bi bi-trash"></i> Unlike 
+                            {% else %} 
+                            <i class="bi bi-hand-thumbs-up"></i> Like 
+                            {% endif %}
+                        </button>
+                    </form>
+                
+
                 <a href="#" class="text-secondary">
                     <i class="bi bi-chat-dots"></i> Comment
                 </a>
+
+                {% endif %}
             {% endif %}
         </div>
 

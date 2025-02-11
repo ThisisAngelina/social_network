@@ -1,8 +1,7 @@
 {% load crispy_forms_tags %}
-{% comment %} <script src="https://unpkg.com/htmx.org@1.9.4"></script> {% endcomment %} 
-
+<script src="https://unpkg.com/htmx.org@1.9.4"></script> 
 <div id="post-{{ post.id }}" class="card mb-3 shadow-sm rounded">
-<form method="post">
+<form method="post" class="mx-3">
     {% csrf_token %}
     {{ form|crispy }}
 

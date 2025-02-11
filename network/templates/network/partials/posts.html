@@ -1,7 +1,7 @@
 
 {% load static %}
 <div id="posts-section">
-    {% for post in page_obj %}
+    {% for post_dict in posts %}
     {% include 'network/partials/post.html' %}
     {% endfor %}
 </div>

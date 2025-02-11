@@ -10,7 +10,6 @@ class Post(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="posts")
     content = models.TextField(max_length=1000)
     timestamp = models.DateTimeField(auto_now_add=True)
-    likes = models.ManyToManyField(User, blank=True, related_name="liked_posts")
     active = models.BooleanField(default=True) # the admin can block users
     
     def __str__(self):
@@ -21,6 +20,7 @@ class Post(models.Model):
     
     class Meta:
         ordering = ['-timestamp']
+ 
 
 
 class Comment(models.Model):
@@ -50,4 +50,16 @@ class Following(models.Model):
 
     def __str__(self):
         return f"{self.follower} follows {self.followed}"
-        
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE) # the user that has like a post
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "post"], name="unique_like")
+        ] # a user can like a post only once
+
+    def __str__(self):
+        return f"{self.user.username} liked: {self.post.content[:50]}..."

@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Post, Following
+from .models import User, Post, Following, Like
 from .forms import PostForm
 
 def login_view(request):
@@ -81,11 +81,25 @@ def home(request):
             return redirect('home')
     else:
         form = PostForm()
+
+        # Pagination
         posts = Post.objects.all()
         paginator = Paginator(posts, 10)  # display 10 posts at a time
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-        return render(request, 'network/home.html', {'form': form, 'page_obj': page_obj})
+
+
+        # Establishing the Like relationships:
+        post_data = []
+
+        for post in page_obj:
+            unlike_option = Like.objects.filter(post=post, user=request.user).exists() # the user had already liked hte post and can now unlike it   
+            post_data.append({
+                'post': post,
+                'unlike_option': unlike_option
+            })
+    
+        return render(request, 'network/home.html', {'form': form, 'posts': post_data, 'page_obj': page_obj})
 
 @login_required
 def profile(request, user_id):
@@ -167,8 +181,11 @@ def save_post(request, post_id):
             form.save()
             messages.success(request, "Your post was successfully edited")
 
+            post_dict = {
+                'post': post # enclose the post instance into a post dict, to align with the HOME view.
+            }
             # Return the updated post HTML
-            return render(request, "network/partials/post.html", {"post": post})
+            return render(request, "network/partials/post.html", {"post_dict": post_dict})
 
     messages.warning(request, "Error updating post")
     return HttpResponse("Invalid Request", status=400)
@@ -176,7 +193,43 @@ def save_post(request, post_id):
 
 @login_required
 def like(request, post_id):
-    pass
+    ''' allow the user to like and unlike posts of other users. Update the like count '''
+    post = get_object_or_404(Post, id=post_id) # indentify the post to like
+    if post is not None:
+        recorded_like = Like.objects.filter(post=post, user=request.user)
+        if recorded_like.exists(): # if the user had already liked that post, so they pressed the button to UNLIKE
+            recorded_like.delete()
+            unlike_option = False # the user can now relike the post
+
+        else: # the user is LIKing the post
+            unlike_option = True # the user can now unlike the post
+            Like.objects.create(user=request.user, post=post)
+        
+        like_count = post.likes.count() # recalculated the number of likes to update the html
+
+        button_html = f'''
+        <button class="btn {'btn-outline-warning mx-2' if unlike_option else 'btn-outline-success mx-2'}"
+                hx-post="/like/{post_id}/"
+                hx-target="#like-btn-{post_id}"
+                hx-swap="outerHTML"
+                id="like-btn-{post_id}">
+            {"<i class='bi bi-trash'></i> Unlike" if unlike_option else "<i class='bi bi-hand-thumbs-up'></i> Like"}
+        </button>
+        '''
+
+        like_count_html = f'''
+        <span id="like-count-{post_id}" hx-swap-oob="true">{like_count} Likes</span>
+        '''
+
+        return HttpResponse(button_html + like_count_html)
+    else: # the post was not found
+        messages.warning(request, "Oops! Something went wrong! Please try again.")
+        return redirect('home')
+
+    
+
+
+
 # aslo need to implement UNLIKE
 # add htmx to the like button
 # when a person has liked a post, send back html of an unlike button 

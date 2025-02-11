@@ -1,4 +1,4 @@
-# 🛍️ Django & HTMX Social Media Web app
+# **💬 Django & HTMX Social Media Web app**
 ## **Deployed at**
 [Text to Display](https://example.com)
 

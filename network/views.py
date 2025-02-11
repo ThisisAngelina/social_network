@@ -62,21 +62,23 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
-
-#@login_required #TODO POST only if authenticated, GET for everyone
 def home(request):
     ''' Allow an authenticated user to publish a post and all users to view posts'''
     if request.method == 'POST':
-        user = request.user
-        form = PostForm(request.POST)
+        if request.user.is_authenticated:
+            user = request.user
+            form = PostForm(request.POST)
 
-        if form.is_valid():
-            new_post = form.save(commit=False)
-            new_post.user = user
-            new_post.save()
-            messages.success(request, "Hooray! Your post was saved!")
+            if form.is_valid():
+                new_post = form.save(commit=False)
+                new_post.user = user
+                new_post.save()
+                messages.success(request, "Hooray! Your post was saved!")
+                return redirect('home')
+            messages.warning(request, "Oops! Something went wrong! Please try again.") # form was not valid
+        else: #user is not authenticated
+            messages.warning(request, "Please log in to publish posts")
             return redirect('home')
-        messages.error(request, "Oops! Something went wrong! Please try again.") # form was not valid
     else:
         form = PostForm()
         posts = Post.objects.all()
@@ -97,46 +99,34 @@ def profile(request, user_id):
 
 @login_required
 def follow(request, user_id):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-       
-            profile_user = get_object_or_404(User, id=user_id)
-            if profile_user is not None:
-                follow_relation, created = Following.objects.get_or_create(follower=request.user, followed=profile_user)
+    profile_user = get_object_or_404(User, id=user_id)
+    if profile_user is not None:
+        follow_relation, created = Following.objects.get_or_create(follower=request.user, followed=profile_user)
 
-                if not created: # the user was already following that profile
-                    follow_relation.delete()  # Unfollow if already following
-                
-                
+        if not created: # the user was already following that profile
+            follow_relation.delete()  # Unfollow if already following
         
+        unfollow_option = created  # Now that the user follows this profile, give them the option to unfollow it
 
-                unfollow_option = created  # Now that the user follows this profile, give them the option to unfollow it
-
-                # Send back the updated button as an HTMX response
-                button_html = f'''
-                    <button class="btn {"btn-danger" if unfollow_option else "btn-primary"}"
-                            hx-post="/follow/{profile_user.id}/"
-                            hx-target="#follow-btn"
-                            hx-swap="outerHTML"
-                            id="follow-btn">
-                        {"Unfollow" if unfollow_option else "Follow"}
-                    </button>
-                '''
-                
-                following_result = "followed" if unfollow_option else "unfollowed" # for the message
-                messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
-                return HttpResponse(button_html)
-            else: # user was not logged in
-                messages.error(request, "Oops! Please log in to publish a post!")
-                return redirect('login')
-
-        else: # the profile user was not found
-            messages.error(request, "Oops! Something went wrong! Please try again.")
-            return redirect('profile', user_id=profile_id)
+        # Send back the updated button as an HTMX response
+        button_html = f'''
+            <button class="btn {"btn-danger" if unfollow_option else "btn-primary"}"
+                    hx-post="/follow/{profile_user.id}/"
+                    hx-target="#follow-btn"
+                    hx-swap="outerHTML"
+                    id="follow-btn">
+                {"Unfollow" if unfollow_option else "Follow"}
+            </button>
+        '''
         
-    else:
-        print("the button sent a GET request")
+        following_result = "followed" if unfollow_option else "unfollowed" # for the message
+        messages.success(request, f"Success! You have {following_result} {profile_user.username}!")
+        return HttpResponse(button_html)
 
+    else: # the profile user was not found
+        messages.warning(request, "Oops! Something went wrong! Please try again.")
+        return redirect('profile', user_id=user_id)
+        
 
 @login_required
 def followed_posts(request):
@@ -155,7 +145,7 @@ def edit_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
     if post.user != request.user:  # Ensure only the owner can edit
-        messages.error(request, "Oops, you cannot edit this post!")
+        messages.warning(request, "Oops, you cannot edit this post!")
         return HttpResponse("Unauthorized", status=403)
 
     form = PostForm(instance=post) # prefill the edit form with the existing data saved in the model instance
@@ -180,13 +170,17 @@ def save_post(request, post_id):
             # Return the updated post HTML
             return render(request, "network/partials/post.html", {"post": post})
 
-    messages.error(request, "Error updating post")
+    messages.warning(request, "Error updating post")
     return HttpResponse("Invalid Request", status=400)
 
 
 @login_required
 def like(request, post_id):
     pass
+# aslo need to implement UNLIKE
+# add htmx to the like button
+# when a person has liked a post, send back html of an unlike button 
+#  
 
 @login_required
 def comment(request, post_id):

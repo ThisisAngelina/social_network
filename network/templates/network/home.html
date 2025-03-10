@@ -6,6 +6,7 @@
 <h3 class="mx-5"> All posts </h3>
 <div class="container mt-4">
     <!-- Section 1: New Post Form (Above) -->
+    {% if user.is_authenticated %}
     <div class="card mb-4">
         <div class="card-body">
             <h5 class="card-title">New Post</h5>
@@ -16,6 +17,7 @@
             </form>
         </div>
     </div>
+    {% endif  %}
 
     <!-- Section 2: Posts Feed (Below) -->
     {% include 'network/partials/posts.html' %}

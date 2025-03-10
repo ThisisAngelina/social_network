@@ -23,6 +23,7 @@
         <small class="text-muted">{{ post_dict.post.timestamp }}</small>
 
         <!-- Icons and Buttons -->
+        {% if user.is_authenticated %}
         <div class="d-flex align-items-center mt-3">
             <span  class="text-danger me-2">❤️</span> <span id="like-count-{{post_dict.post.id}}" class="me-3">{{ post_dict.post.like_count }}</span>
 
@@ -37,11 +38,11 @@
                 </button>
           
 
-            {% else %}
+            {% else %}  <!-- if the user reading the posts is not the author -->
                 <!-- Like & Comment Buttons -->
 
                 <!-- Like Button (only if signed in and the post is not the user's post) -->
-                {% if user.is_authenticated %}
+                
                     <form id="like-form">
                         {% csrf_token %}
                         <button class="btn {% if post_dict.unlike_option %}btn-outline-warning mx-2 {% else %}btn-outline-success mx-2 {% endif %}"
@@ -64,10 +65,10 @@
                     <i class="bi bi-chat-dots"></i> Comment
                 </a>
 
-                {% endif %}
-            {% endif %}
+            {% endif %}  <!-- finished checking if the user reading the posts is not the author -->
+          
         </div>
-
+        {% endif %}  <!-- finished checking if the user is authenticated -->
         </div>
 </div>
 

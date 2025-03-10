@@ -79,7 +79,7 @@ def home(request):
         else: #user is not authenticated
             messages.warning(request, "Please log in to publish posts")
             return redirect('home')
-    else:
+    else: # GET request
         form = PostForm()
 
         # Pagination
@@ -88,12 +88,16 @@ def home(request):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
 
-
+       
         # Establishing the Like relationships:
         post_data = []
 
         for post in page_obj:
-            unlike_option = Like.objects.filter(post=post, user=request.user).exists() # the user had already liked hte post and can now unlike it   
+            if request.user.is_authenticated:
+                unlike_option = Like.objects.filter(post=post, user=request.user).exists() # the user had already liked hte post and can now unlike it 
+            else:
+                unlike_option = False
+
             post_data.append({
                 'post': post,
                 'unlike_option': unlike_option

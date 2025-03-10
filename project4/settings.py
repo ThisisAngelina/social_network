@@ -18,7 +18,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['reals.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://reals.up.railway.app']
 
 
 # Application definition

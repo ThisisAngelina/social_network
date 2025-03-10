@@ -1,6 +1,6 @@
 # **💬 Django & HTMX Social Media Web app**
-## **Deployed at**
-[Text to Display](https://example.com)
+## **Deployed**
+[Here](https://reals.up.railway.app/)
 
 
 A **full-featured social network web application** built with Django, PostgreSQL, and HTMX.  
